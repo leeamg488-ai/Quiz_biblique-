@@ -27,10 +27,24 @@ jobs:
           cd quiz_biblique_app
           flutter create --platforms=android --org com.quizbiblique .
 
-      - name: Compiler l'APK avec logs détaillés
+      - name: Appliquer le nom d'affichage de l'app
+        run: |
+          cd quiz_biblique_app
+          sed -i 's/android:label="[^"]*"/android:label="Quiz Biblique"/' android/app/src/main/AndroidManifest.xml
+
+      - name: Installer les dépendances
         run: |
           cd quiz_biblique_app
           flutter pub get
+
+      - name: Générer l'icône de l'app
+        run: |
+          cd quiz_biblique_app
+          dart run flutter_launcher_icons
+
+      - name: Compiler l'APK avec logs détaillés
+        run: |
+          cd quiz_biblique_app
           flutter build apk --release -v
 
       - name: Upload APK
