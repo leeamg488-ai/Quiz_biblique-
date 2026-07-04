@@ -14,8 +14,8 @@ jobs:
 
       - name: Décompresser le zip
         run: |
-          unzip -o quiz_biblique_app.zip -d app
-          ls -la app
+          unzip -o quiz_biblique_app.zip
+          ls -la
 
       - uses: subosito/flutter-action@v2
         with:
@@ -24,7 +24,7 @@ jobs:
 
       - name: Compiler l'APK
         run: |
-          cd app
+          cd quiz_biblique_app
           flutter pub get
           flutter build apk --release
 
@@ -32,4 +32,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: quiz-biblique-apk
-          path: app/build/app/outputs/flutter-apk/app-release.apk
+          path: quiz_biblique_app/build/app/outputs/flutter-apk/app-release.apk
