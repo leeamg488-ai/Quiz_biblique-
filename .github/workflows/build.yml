@@ -27,6 +27,11 @@ jobs:
           cd quiz_biblique_app
           flutter create --platforms=android --org com.quizbiblique .
 
+      - name: Mettre à jour la version de Kotlin
+        run: |
+          cd quiz_biblique_app
+          grep -rl "1.7.10" android/ | xargs -r sed -i "s/1.7.10/1.9.24/g"
+
       - name: Appliquer le nom d'affichage de l'app
         run: |
           cd quiz_biblique_app
