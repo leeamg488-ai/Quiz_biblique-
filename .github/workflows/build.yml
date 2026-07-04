@@ -1,33 +1,54 @@
-Je génère d'abord une icône distinctive pour l'app (plutôt qu'une icône Flutter par défaut), puis j'applique un vrai thème visuel dans le code.
+name: Build Android APK
 
-Bon, l'icône est cohérente (fond indigo, anneau doré, lettre hébraïque א au centre — symbole du commencement). Je l'intègre au projet avec génération automatique des icônes Android.
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
 
-Maintenant je mets à jour le `pubspec.yaml` pour déclarer la génération d'icône et j'ajoute la police typographique pour un vrai style visuel :
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-Maintenant je mets à jour les couleurs de feedback (bonne/mauvaise réponse) dans les écrans pour qu'elles suivent la palette, et j'ajuste la mise en page de l'accueil et du résultat pour un rendu plus soigné.
+    steps:
+      - uses: actions/checkout@v4
 
-Maintenant j'ajoute la mise à jour du workflow CI pour appliquer le nom de l'app et générer les icônes automatiquement (puisque le dossier natif Android est créé à chaque build) :
+      - name: Décompresser le zip
+        run: |
+          unzip -o quiz_biblique_app.zip
+          ls -la
 
-Maintenant je repackage le projet complet mis à jour :
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
 
-Voilà les deux fichiers à uploader (le processus reste le même que d'habitude) :
+      - name: Générer les fichiers Android manquants
+        run: |
+          cd quiz_biblique_app
+          flutter create --platforms=android --org com.quizbiblique .
 
-**Ce que j'ai changé, "tout à la fois" comme demandé :**
+      - name: Appliquer le nom d'affichage de l'app
+        run: |
+          cd quiz_biblique_app
+          sed -i 's/android:label="[^"]*"/android:label="Quiz Biblique"/' android/app/src/main/AndroidManifest.xml
 
-**Couleurs / thème** — palette cohérente inspirée d'un manuscrit ancien plutôt que les couleurs Material par défaut :
-- Fond parchemin (crème chaud), encre indigo profond, reflets dorés
-- Bonne réponse en vert sauge, mauvaise en brique — moins criards que le vert/rouge Material standard
-- Deux polices : une serif (Spectral) pour les titres à l'esprit manuscrit, une sans-serif lisible (Source Sans) pour le texte courant
+      - name: Installer les dépendances
+        run: |
+          cd quiz_biblique_app
+          flutter pub get
 
-**Icône de l'app** — un sceau rond indigo cerclé d'or avec la lettre hébraïque **א** (aleph, symbole du commencement) au centre, générée automatiquement en toutes les tailles Android requises
+      - name: Générer l'icône de l'app
+        run: |
+          cd quiz_biblique_app
+          dart run flutter_launcher_icons
 
-**Nom affiché** — "Quiz Biblique" au lieu du nom technique par défaut
+      - name: Compiler l'APK avec logs détaillés
+        run: |
+          cd quiz_biblique_app
+          flutter build apk --release -v
 
-**Mise en page** — écran de résultat repensé avec un sceau doré (écho de l'icône) et une appréciation selon le score ("Excellent !", "Bien joué", etc.)
-
-**Pour mettre à jour :**
-1. Remplacez `quiz_biblique_app.zip` sur GitHub (supprimer l'ancien, uploader le nouveau)
-2. Remplacez le contenu de `.github/workflows/build.yml` par la nouvelle version (deux étapes de plus : nom de l'app + génération d'icône)
-3. Attendez le build vert, téléchargez l'APK, réinstallez
-
-Cette fois la compilation prendra un peu plus longtemps (récupération des polices + génération d'icônes). Envoyez-moi une capture si un souci apparaît, sinon dites-moi ce que ça donne une fois installé !
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: quiz-biblique-apk
+          path: quiz_biblique_app/build/app/outputs/flutter-apk/app-release.apk
