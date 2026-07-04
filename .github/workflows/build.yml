@@ -12,35 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Extraire le projet du zip
+      - name: Décompresser le zip
         run: |
-          if [ -f "quiz_biblique_app.zip" ]; then
-            unzip -o quiz_biblique_app.zip -d extracted_dir
-            PROJECT_DIR=$(find extracted_dir -name "pubspec.yaml" -exec dirname {} \; | head -n 1)
-            if [ -z "$PROJECT_DIR" ]; then
-              echo "❌ pubspec.yaml non trouvé !"
-              exit 1
-            fi
-            echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
-          else
-            echo "PROJECT_DIR=." >> $GITHUB_ENV
-          fi
+          unzip -o quiz_biblique_app.zip -d app
+          ls -la app
 
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
           channel: 'stable'
 
-      - name: Installer les dépendances
-        working-directory: ${{ env.PROJECT_DIR }}
-        run: flutter pub get
-
-      - name: Compiler l'APK (release)
-        working-directory: ${{ env.PROJECT_DIR }}
-        run: flutter build apk --release
+      - name: Compiler l'APK
+        run: |
+          cd app
+          flutter pub get
+          flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: quiz-biblique-apk
-          path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-release.apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
